@@ -6,3 +6,5 @@ export const PINO_LOGGER_DEFAULTS = {
     ignore: 'pid,hostname',
   },
 };
+
+export const PINO_CUSTOM_CONTEXT_KEY = 'custom_context';

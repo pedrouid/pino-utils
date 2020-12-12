@@ -1,6 +1,6 @@
 import { Logger, LoggerOptions } from 'pino';
 
-import { PINO_LOGGER_DEFAULTS } from './constants';
+import { PINO_CUSTOM_CONTEXT_KEY, PINO_LOGGER_DEFAULTS } from './constants';
 
 export function getDefaultLoggerOptions(opts?: LoggerOptions): LoggerOptions {
   return {
@@ -10,22 +10,30 @@ export function getDefaultLoggerOptions(opts?: LoggerOptions): LoggerOptions {
   };
 }
 
-export function getBrowserLoggerContext(logger: Logger): string {
-  return (logger as any).custom_context;
+export function getBrowserLoggerContext(
+  logger: Logger,
+  customContextKey: string = PINO_CUSTOM_CONTEXT_KEY
+): string {
+  return (logger as any)[customContextKey];
 }
 
 export function setBrowserLoggerContext(
   logger: Logger,
-  context: string
+  context: string,
+  customContextKey: string = PINO_CUSTOM_CONTEXT_KEY
 ): Logger {
-  (logger as any).custom_context = context;
+  (logger as any)[customContextKey] = context;
   return logger;
 }
 
-export function getLoggerContext(logger: Logger): string {
+export function getLoggerContext(
+  logger: Logger,
+  customContextKey: string = PINO_CUSTOM_CONTEXT_KEY
+): string {
   let context = '';
+  // logger.bindings is undefined in browser
   if (typeof logger.bindings === 'undefined') {
-    context = (logger as any).custom_context;
+    context = getBrowserLoggerContext(logger, customContextKey);
   } else {
     context = logger.bindings().context || '';
   }
@@ -34,18 +42,26 @@ export function getLoggerContext(logger: Logger): string {
 
 export function formatChildLoggerContext(
   logger: Logger,
-  childContext: string
+  childContext: string,
+  customContextKey: string = PINO_CUSTOM_CONTEXT_KEY
 ): string {
-  const parentContext = getLoggerContext(logger);
-  const context = `${parentContext ? `${parentContext}/` : ''}${childContext}`;
+  const parentContext = getLoggerContext(logger, customContextKey);
+  const context = parentContext.trim()
+    ? `${parentContext}/${childContext}`
+    : childContext;
   return context;
 }
 
 export function generateChildLogger(
   logger: Logger,
-  childContext: string
+  childContext: string,
+  customContextKey: string = PINO_CUSTOM_CONTEXT_KEY
 ): Logger {
-  const context = formatChildLoggerContext(logger, childContext);
+  const context = formatChildLoggerContext(
+    logger,
+    childContext,
+    customContextKey
+  );
   const child = logger.child({ context });
-  return setBrowserLoggerContext(child, context);
+  return setBrowserLoggerContext(child, context, customContextKey);
 }
