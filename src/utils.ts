@@ -14,7 +14,7 @@ export function getBrowserLoggerContext(
   logger: Logger,
   customContextKey: string = PINO_CUSTOM_CONTEXT_KEY
 ): string {
-  return (logger as any)[customContextKey];
+  return (logger as any)[customContextKey] || '';
 }
 
 export function setBrowserLoggerContext(
